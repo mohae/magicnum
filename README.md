@@ -19,7 +19,7 @@ To check to see if any format is matched:
 
     format, err := magicnum.GetFormat(r)
     
-If `magicnum` isn't able to determine the format the `format` will be: `Unsupported` and an `NotSupportedErr` will be breturned. Otherwise a `magicnum.Format` will be returned. 
+If `magicnum` isn't able to determine the format the `format` will be: `Unsupported` and an `NotSupportedErr` will be returned. Otherwise a `magicnum.Format` will be returned. 
 
 To check to see if it is of a specific format:
 
