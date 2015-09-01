@@ -33,7 +33,7 @@ The `magicnum.Format` fulfills the `Stringer` interface so the common abbreviati
 Since formats can have different valid extensions, an extension can be matched to a `Format` by using `magicnum.GetFormatFromString(ext)`.
 
 ## Endianness
-This library currently supports checking the magic number using __Little Endian__ only. If there is need for __Big Endian__ support, please file an issue or make a pull request. Ofc, the latter is preferred!
+This library currently supports checking the magic number using _little endian_ only. If there is need for _big endian_ support, please file an issue or make a pull request. Ofc, the latter is preferred!
 
 ## Copyright
 Copyright 2015 by Joel Scoble.
