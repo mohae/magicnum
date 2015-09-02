@@ -52,3 +52,38 @@ func TestIsLZ4(t *testing.T) {
 		t.Errorf("Expected format to be LZ4 got %s", format)
 	}
 }
+
+// TODO: commented out because LZW output doesn't have the magic number.
+// Figure out why and resolve.
+// Another example http://play.golang.org/p/zGLAj1ruoh
+/*
+func TestIsLZW(t *testing.T) {
+	//r := bytes.NewReader(testVal)
+	var buf bytes.Buffer
+	lw := lzw.NewWriter(&buf, lzw.LSB, 8)
+	n, err := lw.Write(testVal)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if n != 452 {
+		t.Errorf("Expected 452 bytes to be copied; %d were", n)
+	}
+	lw.Close()
+	t.Errorf("%x", buf.Bytes())
+	rr := bytes.NewReader(buf.Bytes())
+	ok, err := IsLZW(rr)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if !ok {
+		t.Error("Expected ok to be true, got false")
+	}
+	format, err := GetFormat(rr)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if format != LZW {
+		t.Errorf("Expected format to be LZW got %s", format)
+	}
+}
+*/

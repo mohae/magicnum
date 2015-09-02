@@ -140,8 +140,8 @@ func IsLZ4(r io.ReaderAt) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if n != 4 {
-		return false, fmt.Errorf("magic number error: short read, %d bytes read", n)
+	if n < 4 {
+		return false, fmt.Errorf("magic number error: short read, expected to read 4 bytes, read %d bytes", n)
 	}
 	var h32 uint32
 	// check for lz4
@@ -157,6 +157,36 @@ func IsLZ4(r io.ReaderAt) (bool, error) {
 		return false, fmt.Errorf("error while converting LZ4 magic number for comparison: %s", err)
 	}
 	if h32 == m32 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func IsLZW(r io.ReaderAt) (bool, error) {
+	h := make([]byte, 2)
+	// Reat the first 8 bytes since that's where most magic numbers are
+	n, err := r.ReadAt(h, 0)
+	if err != nil {
+		return false, err
+	}
+	if n < 2 {
+		return false, fmt.Errorf("magic number error: short read, expected to read 2 bytes, read %d bytes", n)
+	}
+	var h16 uint16
+	// check for lzw
+	hbuf := bytes.NewReader(h)
+	err = binary.Read(hbuf, binary.LittleEndian, &h16)
+	if err != nil {
+		return false, fmt.Errorf("error while checking if input matched LZW's magic number: %s", err)
+	}
+	var m16 uint16
+	mbuf := bytes.NewBuffer(headerLZW)
+	err = binary.Read(mbuf, binary.BigEndian, &m16)
+	fmt.Printf("%x %x %x\n", h16, m16, headerLZW)
+	if err != nil {
+		return false, fmt.Errorf("error while converting LZW magic number for comparison: %s", err)
+	}
+	if h16 == m16 {
 		return true, nil
 	}
 	return false, nil
