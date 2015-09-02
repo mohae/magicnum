@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 )
 
 const (
@@ -118,3 +119,39 @@ var (
 	headerRAR        = []byte{0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x01, 0x00}
 	headerRAROld     = []byte{0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x00}
 )
+
+// GetFormat tries to match up the data in the Reader to a supported
+// magic number, if a match isn't found, UnsupportedFmt is returned
+func GetFormat(r io.ReaderAt) (Format, error) {
+	ok, err := IsLZ4(r)
+	if err != nil {
+		return Unknown, err
+	}
+	if ok {
+		return LZ4, nil
+	}
+	return Unknown, errors.New("unsupported format: input format is not known")
+}
+
+func IsLZ4(r io.ReaderAt) (bool, error) {
+	h := make([]byte, 8, 8) // 8 is minimum cap of a byte slice so...
+	// Reat the first 8 bytes since that's where most magic numbers are
+	r.ReadAt(h, 0)
+	var h32 uint32
+	// check for lz4
+	hbuf := bytes.NewReader(headerLZ4)
+	err := binary.Read(hbuf, binary.LittleEndian, &h32)
+	if err != nil {
+		return false, fmt.Errorf("error while checking if input matched LZ4's magic number: %s", err)
+	}
+	var m32 uint32
+	mbuf := bytes.NewBuffer(headerLZ4)
+	err = binary.Read(mbuf, binary.LittleEndian, &m32)
+	if err != nil {
+		return false, fmt.Errorf("error while converting LZ4 magic number for comparison: %s", err)
+	}
+	if h32 == m32 {
+		return true, nil
+	}
+	return false, nil
+}
