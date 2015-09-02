@@ -2,6 +2,7 @@ package magicnum
 
 import (
 	"bytes"
+	"compress/lzw"
 	"io"
 	"testing"
 
@@ -23,20 +24,19 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
 // All algorithm specific tests will also call GetFormat() to validate its
 // behavior for that algorithm.
 func TestIsLZ4(t *testing.T) {
-	//b := make([]byte, 512)
-	var b []byte
+	b := make([]byte, 0, 512)
 	r := bytes.NewReader(testVal)
 	w := bytes.NewBuffer(b)
-	lzw := lz4.NewWriter(w)
-	n, err := io.Copy(lzw, r)
+	lw := lz4.NewWriter(w)
+	n, err := io.Copy(lw, r)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	if n != 452 {
 		t.Errorf("Expected 452 bytes to be copied; %d were", n)
 	}
-	lzw.Close()
-	rr := bytes.NewReader(b)
+	lw.Close()
+	rr := bytes.NewReader(w.Bytes())
 	ok, err := IsLZ4(rr)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)

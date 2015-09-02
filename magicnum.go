@@ -134,19 +134,25 @@ func GetFormat(r io.ReaderAt) (Format, error) {
 }
 
 func IsLZ4(r io.ReaderAt) (bool, error) {
-	h := make([]byte, 8, 8) // 8 is minimum cap of a byte slice so...
-	// Reat the first 8 bytes since that's where most magic numbers are
-	r.ReadAt(h, 0)
+	h := make([]byte, 4)
+	// Reat the first 4 bytes
+	n, err := r.ReadAt(h, 0)
+	if err != nil {
+		return false, err
+	}
+	if n != 4 {
+		return false, fmt.Errorf("magic number error: short read, %d bytes read", n)
+	}
 	var h32 uint32
 	// check for lz4
-	hbuf := bytes.NewReader(headerLZ4)
-	err := binary.Read(hbuf, binary.LittleEndian, &h32)
+	hbuf := bytes.NewReader(h)
+	err = binary.Read(hbuf, binary.LittleEndian, &h32)
 	if err != nil {
 		return false, fmt.Errorf("error while checking if input matched LZ4's magic number: %s", err)
 	}
 	var m32 uint32
 	mbuf := bytes.NewBuffer(headerLZ4)
-	err = binary.Read(mbuf, binary.LittleEndian, &m32)
+	err = binary.Read(mbuf, binary.BigEndian, &m32)
 	if err != nil {
 		return false, fmt.Errorf("error while converting LZ4 magic number for comparison: %s", err)
 	}
