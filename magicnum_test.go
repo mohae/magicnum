@@ -2,8 +2,8 @@ package magicnum
 
 import (
 	"bytes"
-	"compress/lzw"
-	"io"
+	//"compress/lzw"
+	//"io"
 	"testing"
 
 	"github.com/pierrec/lz4"
@@ -23,12 +23,14 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
 //
 // All algorithm specific tests will also call GetFormat() to validate its
 // behavior for that algorithm.
+//func TestIsBzip2(t *testing.T) {
+
+//}
+
 func TestIsLZ4(t *testing.T) {
-	b := make([]byte, 0, 512)
-	r := bytes.NewReader(testVal)
-	w := bytes.NewBuffer(b)
-	lw := lz4.NewWriter(w)
-	n, err := io.Copy(lw, r)
+	var buf bytes.Buffer
+	lw := lz4.NewWriter(&buf)
+	n, err := lw.Write(testVal)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -36,15 +38,15 @@ func TestIsLZ4(t *testing.T) {
 		t.Errorf("Expected 452 bytes to be copied; %d were", n)
 	}
 	lw.Close()
-	rr := bytes.NewReader(w.Bytes())
-	ok, err := IsLZ4(rr)
+	r := bytes.NewReader(buf.Bytes())
+	ok, err := IsLZ4(r)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	if !ok {
 		t.Error("Expected ok to be true, got false")
 	}
-	format, err := GetFormat(rr)
+	format, err := GetFormat(r)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
