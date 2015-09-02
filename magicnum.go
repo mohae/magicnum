@@ -10,10 +10,10 @@ import (
 
 const (
 	Unknown    Format = iota // unknown format
-	Gzip                     // Gzip compression format; always a tar
+	Gzip                     // Gzip compression format
 	Tar                      // Tar format; normally used
-	Tar1                     // Tar1 header format; normalizes to FmtTar
-	Tar2                     // Tar1 header format; normalizes to FmtTar
+	Tar1                     // Tar1 header format; normalizes to Tar
+	Tar2                     // Tar1 header format; normalizes to Tar
 	Zip                      // Zip archive
 	ZipEmpty                 // Empty Zip Archive
 	ZipSpanned               // Spanned Zip Archive
@@ -23,7 +23,6 @@ const (
 	LZ4                      // LZ4 compression
 	RAR                      // RAR 5.0 and later compression
 	RAROld                   // Rar pre 1.5 compression
-	LZ4                      // LZ4 compression
 )
 
 // TODO: should Format be more specific? e.g. CompressionFormat, MediaFormat, etc.
