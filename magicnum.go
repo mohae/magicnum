@@ -63,7 +63,7 @@ func (f Format) Ext() string {
 	case LZW:
 		return ".Z"
 	case LZ4:
-		return "lz4"
+		return ".lz4"
 	}
 	return "unknown"
 }
