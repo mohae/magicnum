@@ -100,6 +100,31 @@ func FormatFromString(s string) Format {
 	return Unknown
 }
 
+// ParseFormat takes a string and returns the format or unknown. Any compressed
+// tar extensions are returned as the compression format and not tar.
+//
+// If the passed string starts with a '.', it is removed.
+// All strings are lowercased
+func ParseFormat(s string) Format {
+	if s[0] == '.' {
+		s = s[1:]
+	}
+	s = strings.ToLower(s)
+	switch s {
+	case "gzip", "tar.gz", "tgz":
+		return Gzip
+	case "tar":
+		return Tar
+	case "bz2", "tbz", "tb2", "tbz2", "tar.bz2":
+		return Bzip2
+	case "lz4", "tar.lz4", "tz4":
+		return LZ4
+	case "zip":
+		return Zip
+	}
+	return Unknown
+}
+
 // GetFormat tries to match up the data in the Reader to a supported
 // magic number, if a match isn't found, UnsupportedFmt is returned
 //
