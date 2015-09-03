@@ -161,13 +161,13 @@ func IsBzip2(r io.ReaderAt) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while checking if input matched bzip2's magic number: %s", err)
 	}
-	var mb [3]byte
-	mbuf := bytes.NewBuffer(headerBzip2)
-	err = binary.Read(mbuf, binary.BigEndian, &mb)
+	var cb [3]byte
+	cbuf := bytes.NewBuffer(headerBzip2)
+	err = binary.Read(cbuf, binary.BigEndian, &cb)
 	if err != nil {
 		return false, fmt.Errorf("error while converting bzip2 magic number for comparison: %s", err)
 	}
-	if hb == mb {
+	if hb == cb {
 		return true, nil
 	}
 	return false, nil
@@ -189,13 +189,13 @@ func IsGzip(r io.ReaderAt) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while checking if input matched bzip2's magic number: %s", err)
 	}
-	var m16 uint16
-	mbuf := bytes.NewBuffer(headerGzip)
-	err = binary.Read(mbuf, binary.BigEndian, &m16)
+	var c16 uint16
+	cbuf := bytes.NewBuffer(headerGzip)
+	err = binary.Read(cbuf, binary.BigEndian, &c16)
 	if err != nil {
 		return false, fmt.Errorf("error while converting bzip2 magic number for comparison: %s", err)
 	}
-	if h16 == m16 {
+	if h16 == c16 {
 		return true, nil
 	}
 	return false, nil
@@ -217,13 +217,13 @@ func IsLZ4(r io.ReaderAt) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while checking if input matched LZ4's magic number: %s", err)
 	}
-	var m32 uint32
-	mbuf := bytes.NewBuffer(headerLZ4)
-	err = binary.Read(mbuf, binary.BigEndian, &m32)
+	var c32 uint32
+	cbuf := bytes.NewBuffer(headerLZ4)
+	err = binary.Read(cbuf, binary.BigEndian, &c32)
 	if err != nil {
 		return false, fmt.Errorf("error while converting LZ4 magic number for comparison: %s", err)
 	}
-	if h32 == m32 {
+	if h32 == c32 {
 		return true, nil
 	}
 	return false, nil
@@ -245,13 +245,13 @@ func IsLZW(r io.ReaderAt) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while checking if input matched LZW's magic number: %s", err)
 	}
-	var m16 uint16
-	mbuf := bytes.NewBuffer(headerLZW)
-	err = binary.Read(mbuf, binary.BigEndian, &m16)
+	var c16 uint16
+	cbuf := bytes.NewBuffer(headerLZW)
+	err = binary.Read(cbuf, binary.BigEndian, &c16)
 	if err != nil {
 		return false, fmt.Errorf("error while converting LZW magic number for comparison: %s", err)
 	}
-	if h16 == m16 {
+	if h16 == c16 {
 		return true, nil
 	}
 	return false, nil
