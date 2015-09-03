@@ -19,11 +19,8 @@ const (
 	ZipEmpty                 // Empty Zip Archive
 	ZipSpanned               // Spanned Zip Archive
 	Bzip2                    // Bzip2 compression
-	LZH                      // LZH compression
 	LZW                      // LZW compression
 	LZ4                      // LZ4 compression
-	RAR                      // RAR 5.0 and later compression
-	RAROld                   // Rar pre 1.5 compression
 )
 
 // TODO: should Format be more specific? e.g. CompressionFormat, MediaFormat, etc.
@@ -43,16 +40,10 @@ func (f Format) String() string {
 		return "spanned zip archive"
 	case Bzip2:
 		return "bzip2"
-	case LZH:
-		return "lzh"
 	case LZW:
 		return "lzw"
 	case LZ4:
 		return "lz4"
-	case RAR:
-		return "rar post 5.0"
-	case RAROld:
-		return "rar pre 1.5"
 	}
 	return "unknown"
 }
@@ -69,14 +60,10 @@ func (f Format) Ext() string {
 		return ".zip"
 	case Bzip2:
 		return ".bz2"
-	case LZH:
-		return ".lzh"
 	case LZW:
 		return ".Z"
 	case LZ4:
 		return "lz4"
-	case RAR, RAROld:
-		return ".rar"
 	}
 	return "unknown"
 }
@@ -92,14 +79,10 @@ func FormatFromString(s string) Format {
 		return Zip
 	case "bzip2", "bz2":
 		return Bzip2
-	case "lzh":
-		return LZH
 	case "lzw", "Z":
 		return LZW
 	case "lz4":
 		return LZ4
-	case "rar":
-		return RAR
 	}
 	return Unknown
 }
@@ -113,11 +96,8 @@ var (
 	headerZipEmpty   = []byte{0x50, 0x4b, 0x05, 0x06}
 	headerZipSpanned = []byte{0x50, 0x4b, 0x07, 0x08}
 	headerBzip2      = []byte{0x42, 0x5a, 0x68}
-	headerLZH        = []byte{0x1F, 0xa0}
 	headerLZW        = []byte{0x1F, 0x9d}
 	headerLZ4        = []byte{0x18, 0x4d, 0x22, 0x04}
-	headerRAR        = []byte{0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x01, 0x00}
-	headerRAROld     = []byte{0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x00}
 )
 
 // GetFormat tries to match up the data in the Reader to a supported
