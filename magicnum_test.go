@@ -1,6 +1,7 @@
 package magicnum
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
@@ -103,6 +104,43 @@ func TestIsLZ4(t *testing.T) {
 	}
 	if format != LZ4 {
 		t.Errorf("Expected format to be LZ4 got %s", format)
+	}
+}
+
+func TestIsTar(t *testing.T) {
+	buf := new(bytes.Buffer)
+	tw := tar.NewWriter(buf)
+	hdr := &tar.Header{
+		Name: "lorem.txt",
+		Mode: 644,
+		Size: int64(len(testVal)),
+	}
+	err := tw.WriteHeader(hdr)
+	if err != nil {
+		t.Errorf("unexpected error while writing tar header: %s", err)
+	}
+	_, err = tw.Write(testVal)
+	if err != nil {
+		t.Errorf("unexpected error while writing file to tar: %s", err)
+	}
+	err = tw.Close()
+	if err != nil {
+		t.Errorf("unexpected error while closing tar: %s", err)
+	}
+	r := bytes.NewReader(buf.Bytes())
+	ok, err := IsTar(r)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if !ok {
+		t.Error("Expected ok to be true, got false")
+	}
+	format, err := GetFormat(r)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if format != Tar {
+		t.Errorf("Expected format to be tar got %s", format)
 	}
 }
 

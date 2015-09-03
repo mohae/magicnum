@@ -128,6 +128,13 @@ func GetFormat(r io.ReaderAt) (Format, error) {
 	if ok {
 		return Zip, nil
 	}
+	ok, err = IsTar(r)
+	if err != nil {
+		return Unknown, err
+	}
+	if ok {
+		return Tar, nil
+	}
 	ok, err = IsBzip2(r)
 	if err != nil {
 		return Unknown, err
@@ -257,8 +264,45 @@ func IsLZW(r io.ReaderAt) (bool, error) {
 	return false, nil
 }
 
-// IsZip checks to see if the received reader's contents are in zip format
-// by checking the magic numbers. This wil match on zip, empty zip and spanned
+// IsTar checks to see if the received reader's contents are in the tar format
+// by checking the magic numbers. This evaluates using both tar1 and tar2 magic
+// numbers.
+func IsTar(r io.ReaderAt) (bool, error) {
+	h := make([]byte, 8)
+	// Read the first 8 bytes at offset 257
+	_, err := r.ReadAt(h, 257)
+	if err != nil {
+		return false, err
+	}
+	var h64 uint64
+	// check for Zip
+	hbuf := bytes.NewReader(h)
+	err = binary.Read(hbuf, binary.BigEndian, &h64)
+	if err != nil {
+		return false, fmt.Errorf("error while checking if input matched tar's magic number: %s", err)
+	}
+	var c64 uint64
+	cbuf := bytes.NewBuffer(headerTar1)
+	err = binary.Read(cbuf, binary.BigEndian, &c64)
+	if err != nil {
+		return false, fmt.Errorf("error while converting the tar magic number for comparison: %s", err)
+	}
+	if h64 == c64 {
+		return true, nil
+	}
+	cbuf = bytes.NewBuffer(headerTar2)
+	err = binary.Read(cbuf, binary.BigEndian, &c64)
+	if err != nil {
+		return false, fmt.Errorf("error while converting the empty tar magic number for comparison: %s", err)
+	}
+	if h64 == c64 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// IsZip checks to see if the received reader's contents are in the zip format
+// by checking the magic numbers. This will match on zip, empty zip and spanned
 // zip magic numbers. If you need to distinguish between those, use something
 // else.
 func IsZip(r io.ReaderAt) (bool, error) {
