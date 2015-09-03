@@ -2,8 +2,8 @@ package magicnum
 
 import (
 	"bytes"
-	//"compress/lzw"
-	//"io"
+	"compress/gzip"
+	"os"
 	"testing"
 
 	"github.com/pierrec/lz4"
@@ -23,9 +23,60 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
 //
 // All algorithm specific tests will also call GetFormat() to validate its
 // behavior for that algorithm.
-//func TestIsBzip2(t *testing.T) {
 
-//}
+// this test uses a tarball compressed with bzip2 because compress/bzip2
+// doesn't have a compressor.
+func TestIsBzip2(t *testing.T) {
+	f, err := os.Open("test_files/test.bz2")
+	if err != nil {
+		t.Errorf("open test.bz2: expected no error, got %s", err)
+		return
+	}
+	defer f.Close()
+	//r := bzip2.NewReader(f)
+	ok, err := IsBzip2(f)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if !ok {
+		t.Error("expected ok to be true for bzip2, got false")
+	}
+	format, err := GetFormat(f)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if format != Bzip2 {
+		t.Errorf("expected format to be bzip2, got %s", format)
+	}
+}
+
+func TestIsGzip(t *testing.T) {
+	var buf bytes.Buffer
+	w := gzip.NewWriter(&buf)
+	n, err := w.Write(testVal)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if n != 452 {
+		t.Errorf("Expected 452 bytes to be written; %d were", n)
+	}
+	w.Close()
+	r := bytes.NewReader(buf.Bytes())
+	ok, err := IsGzip(r)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if !ok {
+		t.Error("Expected ok to be true, got false")
+	}
+	format, err := GetFormat(r)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if format != Gzip {
+		t.Errorf("Expected format to be gzip got %s", format)
+	}
+}
 
 func TestIsLZ4(t *testing.T) {
 	var buf bytes.Buffer
@@ -35,7 +86,7 @@ func TestIsLZ4(t *testing.T) {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	if n != 452 {
-		t.Errorf("Expected 452 bytes to be copied; %d were", n)
+		t.Errorf("Expected 452 bytes to be written; %d were", n)
 	}
 	lw.Close()
 	r := bytes.NewReader(buf.Bytes())
@@ -60,7 +111,6 @@ func TestIsLZ4(t *testing.T) {
 // Another example http://play.golang.org/p/zGLAj1ruoh
 /*
 func TestIsLZW(t *testing.T) {
-	//r := bytes.NewReader(testVal)
 	var buf bytes.Buffer
 	lw := lzw.NewWriter(&buf, lzw.LSB, 8)
 	n, err := lw.Write(testVal)
