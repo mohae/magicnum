@@ -122,6 +122,10 @@ var (
 
 // GetFormat tries to match up the data in the Reader to a supported
 // magic number, if a match isn't found, UnsupportedFmt is returned
+//
+// For zips, this will also match on files with empty zip or spanned zip magic
+// numbers.  If you need to distinguich between the various zip formats, use
+// something else.
 func GetFormat(r io.ReaderAt) (Format, error) {
 	ok, err := IsLZ4(r)
 	if err != nil {
@@ -130,18 +134,101 @@ func GetFormat(r io.ReaderAt) (Format, error) {
 	if ok {
 		return LZ4, nil
 	}
+	ok, err = IsGzip(r)
+	if err != nil {
+		return Unknown, err
+	}
+	if ok {
+		return Gzip, nil
+	}
+	ok, err = IsZip(r)
+	if err != nil {
+		return Unknown, err
+	}
+	if ok {
+		return Zip, nil
+	}
+	ok, err = IsBzip2(r)
+	if err != nil {
+		return Unknown, err
+	}
+	if ok {
+		return Bzip2, nil
+	}
+	ok, err = IsLZW(r)
+	if err != nil {
+		return Unknown, err
+	}
+	if ok {
+		return LZW, nil
+	}
 	return Unknown, errors.New("unsupported format: input format is not known")
 }
 
-func IsLZ4(r io.ReaderAt) (bool, error) {
-	h := make([]byte, 4)
-	// Reat the first 4 bytes
-	n, err := r.ReadAt(h, 0)
+// IsBzip2 checks to see if the received reader's contents are in bzip2 format
+// by checking the magic numbers.
+func IsBzip2(r io.ReaderAt) (bool, error) {
+	h := make([]byte, 3)
+	// Read the first 3 bytes
+	_, err := r.ReadAt(h, 0)
 	if err != nil {
 		return false, err
 	}
-	if n < 4 {
-		return false, fmt.Errorf("magic number error: short read, expected to read 4 bytes, read %d bytes", n)
+	var hb [3]byte
+	// check for bzip2
+	hbuf := bytes.NewReader(h)
+	err = binary.Read(hbuf, binary.LittleEndian, &hb)
+	if err != nil {
+		return false, fmt.Errorf("error while checking if input matched bzip2's magic number: %s", err)
+	}
+	var mb [3]byte
+	mbuf := bytes.NewBuffer(headerBzip2)
+	err = binary.Read(mbuf, binary.BigEndian, &mb)
+	if err != nil {
+		return false, fmt.Errorf("error while converting bzip2 magic number for comparison: %s", err)
+	}
+	if hb == mb {
+		return true, nil
+	}
+	return false, nil
+}
+
+// IsGzip checks to see if the received reader's contents are in gzip format
+// by checking the magic numbers.
+func IsGzip(r io.ReaderAt) (bool, error) {
+	h := make([]byte, 2)
+	// Read the first 2 bytes
+	_, err := r.ReadAt(h, 0)
+	if err != nil {
+		return false, err
+	}
+	var h16 uint16
+	// check for gzip
+	hbuf := bytes.NewReader(h)
+	err = binary.Read(hbuf, binary.BigEndian, &h16)
+	if err != nil {
+		return false, fmt.Errorf("error while checking if input matched bzip2's magic number: %s", err)
+	}
+	var m16 uint16
+	mbuf := bytes.NewBuffer(headerGzip)
+	err = binary.Read(mbuf, binary.BigEndian, &m16)
+	if err != nil {
+		return false, fmt.Errorf("error while converting bzip2 magic number for comparison: %s", err)
+	}
+	if h16 == m16 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// IsLZ4 checks to see if the received reader's contents are in LZ4 foramt by
+// checking the magic numbers.
+func IsLZ4(r io.ReaderAt) (bool, error) {
+	h := make([]byte, 4)
+	// Read the first 4 bytes
+	_, err := r.ReadAt(h, 0)
+	if err != nil {
+		return false, err
 	}
 	var h32 uint32
 	// check for lz4
@@ -162,15 +249,14 @@ func IsLZ4(r io.ReaderAt) (bool, error) {
 	return false, nil
 }
 
+// IsLZW checks to see if the received reader's contents are in LZ4 format by
+// checking the magic numbers.
 func IsLZW(r io.ReaderAt) (bool, error) {
 	h := make([]byte, 2)
 	// Reat the first 8 bytes since that's where most magic numbers are
-	n, err := r.ReadAt(h, 0)
+	_, err := r.ReadAt(h, 0)
 	if err != nil {
 		return false, err
-	}
-	if n < 2 {
-		return false, fmt.Errorf("magic number error: short read, expected to read 2 bytes, read %d bytes", n)
 	}
 	var h16 uint16
 	// check for lzw
@@ -182,11 +268,56 @@ func IsLZW(r io.ReaderAt) (bool, error) {
 	var m16 uint16
 	mbuf := bytes.NewBuffer(headerLZW)
 	err = binary.Read(mbuf, binary.BigEndian, &m16)
-	fmt.Printf("%x %x %x\n", h16, m16, headerLZW)
 	if err != nil {
 		return false, fmt.Errorf("error while converting LZW magic number for comparison: %s", err)
 	}
 	if h16 == m16 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// IsZip checks to see if the received reader's contents are in zip format
+// by checking the magic numbers. This wil match on zip, empty zip and spanned
+// zip magic numbers. If you need to distinguish between those, use something
+// else.
+func IsZip(r io.ReaderAt) (bool, error) {
+	h := make([]byte, 4)
+	// Read the first 4 bytes
+	_, err := r.ReadAt(h, 0)
+	if err != nil {
+		return false, err
+	}
+	var h32 uint32
+	// check for Zip
+	hbuf := bytes.NewReader(h)
+	err = binary.Read(hbuf, binary.BigEndian, &h32)
+	if err != nil {
+		return false, fmt.Errorf("error while checking if input matched zip's magic number: %s", err)
+	}
+	var c32 uint32
+	cbuf := bytes.NewBuffer(headerZip)
+	err = binary.Read(cbuf, binary.BigEndian, &c32)
+	if err != nil {
+		return false, fmt.Errorf("error while converting the zip magic number for comparison: %s", err)
+	}
+	if h32 == c32 {
+		return true, nil
+	}
+	cbuf = bytes.NewBuffer(headerZipEmpty)
+	err = binary.Read(cbuf, binary.BigEndian, &c32)
+	if err != nil {
+		return false, fmt.Errorf("error while converting the empty zip magic number for comparison: %s", err)
+	}
+	if h32 == c32 {
+		return true, nil
+	}
+	cbuf = bytes.NewBuffer(headerZipSpanned)
+	err = binary.Read(cbuf, binary.BigEndian, &c32)
+	if err != nil {
+		return false, fmt.Errorf("error while converting the spanned zip magic number for comparison: %s", err)
+	}
+	if h32 == c32 {
 		return true, nil
 	}
 	return false, nil

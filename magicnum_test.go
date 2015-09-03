@@ -1,6 +1,7 @@
 package magicnum
 
 import (
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"os"
@@ -33,7 +34,6 @@ func TestIsBzip2(t *testing.T) {
 		return
 	}
 	defer f.Close()
-	//r := bzip2.NewReader(f)
 	ok, err := IsBzip2(f)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
@@ -103,6 +103,45 @@ func TestIsLZ4(t *testing.T) {
 	}
 	if format != LZ4 {
 		t.Errorf("Expected format to be LZ4 got %s", format)
+	}
+}
+
+// a file is used for the non-empty test because creating one using the test
+// data in this func resulted in the zip empty header...probably an error on
+// my part.
+func TestIsZip(t *testing.T) {
+	buf := new(bytes.Buffer)
+	w := zip.NewWriter(buf)
+	err := w.Close()
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	r := bytes.NewReader(buf.Bytes())
+	ok, err := IsZip(r)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if !ok {
+		t.Error("Expected ok to be true, got false")
+	}
+	f, err := os.Open("test_files/test.zip")
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	defer f.Close()
+	ok, err = IsZip(f)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if !ok {
+		t.Error("Expected ok to be true, got false")
+	}
+	format, err := GetFormat(f)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if format != Zip {
+		t.Errorf("Expected format to be gzip got %s", format)
 	}
 }
 
