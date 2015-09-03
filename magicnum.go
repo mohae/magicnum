@@ -19,8 +19,8 @@ const (
 	ZipEmpty                 // Empty Zip Archive
 	ZipSpanned               // Spanned Zip Archive
 	Bzip2                    // Bzip2 compression
-	LZW                      // LZW compression
-	LZ4                      // LZ4 compression
+	//LZW                      // LZW compression
+	LZ4 // LZ4 compression
 )
 
 // Magic numbers for magicnum supported formats
@@ -32,8 +32,8 @@ var (
 	headerZipEmpty   = []byte{0x50, 0x4b, 0x05, 0x06}
 	headerZipSpanned = []byte{0x50, 0x4b, 0x07, 0x08}
 	headerBzip2      = []byte{0x42, 0x5a, 0x68}
-	headerLZW        = []byte{0x1F, 0x9d}
-	headerLZ4        = []byte{0x18, 0x4d, 0x22, 0x04}
+	//headerLZW        = []byte{0x1F, 0x9d}
+	headerLZ4 = []byte{0x18, 0x4d, 0x22, 0x04}
 )
 
 // TODO: should Format be more specific? e.g. CompressionFormat, MediaFormat, etc.
@@ -53,8 +53,8 @@ func (f Format) String() string {
 		return "spanned zip archive"
 	case Bzip2:
 		return "bzip2"
-	case LZW:
-		return "lzw"
+	//case LZW:
+	//	return "lzw"
 	case LZ4:
 		return "lz4"
 	}
@@ -73,8 +73,8 @@ func (f Format) Ext() string {
 		return ".zip"
 	case Bzip2:
 		return ".bz2"
-	case LZW:
-		return ".Z"
+	//case LZW:
+	//	return ".Z"
 	case LZ4:
 		return ".lz4"
 	}
@@ -92,8 +92,8 @@ func FormatFromString(s string) Format {
 		return Zip
 	case "bzip2", "bz2":
 		return Bzip2
-	case "lzw", "Z":
-		return LZW
+	//case "lzw", "Z":
+	//	return LZW
 	case "lz4":
 		return LZ4
 	}
@@ -142,13 +142,13 @@ func GetFormat(r io.ReaderAt) (Format, error) {
 	if ok {
 		return Bzip2, nil
 	}
-	ok, err = IsLZW(r)
-	if err != nil {
-		return Unknown, err
-	}
-	if ok {
-		return LZW, nil
-	}
+	//ok, err = IsLZW(r)
+	//if err != nil {
+	//	return Unknown, err
+	//}
+	//if ok {
+	//	return LZW, nil
+	//}
 	return Unknown, errors.New("unsupported format: input format is not known")
 }
 
@@ -238,6 +238,9 @@ func IsLZ4(r io.ReaderAt) (bool, error) {
 
 // IsLZW checks to see if the received reader's contents are in LZ4 format by
 // checking the magic numbers.
+//
+// TODO: unsupported until I have a better understanding of how to handle LZW
+/*
 func IsLZW(r io.ReaderAt) (bool, error) {
 	h := make([]byte, 2)
 	// Reat the first 8 bytes since that's where most magic numbers are
@@ -263,6 +266,7 @@ func IsLZW(r io.ReaderAt) (bool, error) {
 	}
 	return false, nil
 }
+*/
 
 // IsTar checks to see if the received reader's contents are in the tar format
 // by checking the magic numbers. This evaluates using both tar1 and tar2 magic
