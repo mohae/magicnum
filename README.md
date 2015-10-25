@@ -1,4 +1,6 @@
 # magicnum
+[![Build Status](https://travis-ci.org/mohae/magicnum.png)](https://travis-ci.org/mohae/magicnum)
+
 provides functions for checking magic numbers; currently supports a limited number of file formats
 
 ## About
