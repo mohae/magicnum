@@ -1,4 +1,4 @@
-package magicnum
+package mcompress
 
 import (
 	"bytes"

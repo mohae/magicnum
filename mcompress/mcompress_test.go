@@ -1,4 +1,4 @@
-package magicnum
+package mcompress
 
 import (
 	"archive/tar"
@@ -29,7 +29,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
 // this test uses a tarball compressed with bzip2 because compress/bzip2
 // doesn't have a compressor.
 func TestIsBzip2(t *testing.T) {
-	f, err := os.Open("test_files/test.bz2")
+	f, err := os.Open("../test_files/test.bz2")
 	if err != nil {
 		t.Errorf("open test.bz2: expected no error, got %s", err)
 		return
@@ -162,7 +162,7 @@ func TestIsZip(t *testing.T) {
 	if !ok {
 		t.Error("Expected ok to be true, got false")
 	}
-	f, err := os.Open("test_files/test.zip")
+	f, err := os.Open("../test_files/test.zip")
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
