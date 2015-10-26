@@ -23,7 +23,7 @@ const (
 	LZ4 // LZ4 compression
 )
 
-// Magic numbers for magicnum for compression and archive formats
+// Magic numbers for compression and archive formats
 var (
 	magicnumGzip       = []byte{0x1f, 0x8b}
 	magicnumTar1       = []byte{0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x30, 0x30} // offset: 257
