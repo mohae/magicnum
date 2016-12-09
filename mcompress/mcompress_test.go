@@ -28,14 +28,14 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
 
 // this test uses a tarball compressed with bzip2 because compress/bzip2
 // doesn't have a compressor.
-func TestIsBzip2(t *testing.T) {
+func TestIsBZip2(t *testing.T) {
 	f, err := os.Open("../test_files/test.bz2")
 	if err != nil {
 		t.Errorf("open test.bz2: expected no error, got %s", err)
 		return
 	}
 	defer f.Close()
-	ok, err := IsBzip2(f)
+	ok, err := IsBZip2(f)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -46,12 +46,12 @@ func TestIsBzip2(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	if format != Bzip2 {
+	if format != BZip2 {
 		t.Errorf("expected format to be bzip2, got %s", format)
 	}
 }
 
-func TestIsGzip(t *testing.T) {
+func TestIsGZip(t *testing.T) {
 	var buf bytes.Buffer
 	w := gzip.NewWriter(&buf)
 	n, err := w.Write(testVal)
@@ -63,7 +63,7 @@ func TestIsGzip(t *testing.T) {
 	}
 	w.Close()
 	r := bytes.NewReader(buf.Bytes())
-	ok, err := IsGzip(r)
+	ok, err := IsGZip(r)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -74,7 +74,7 @@ func TestIsGzip(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	if format != Gzip {
+	if format != GZip {
 		t.Errorf("Expected format to be gzip got %s", format)
 	}
 }
@@ -216,3 +216,29 @@ func TestIsLZW(t *testing.T) {
 	}
 }
 */
+
+func TestString(t *testing.T) {
+	tests := []struct {
+		f        Format
+		expected string
+	}{
+		{Format(-1), "Format(-1)"},
+		{Format(99), "Format(99)"},
+		{Unknown, "Unknown"},
+		{GZip, "GZip"},
+		{BZip2, "BZip2"},
+		{LZ4, "LZ4"},
+		{Tar, "Tar"},
+		{Tar1, "Tar1"},
+		{Tar2, "Tar2"},
+		{Zip, "Zip"},
+		{ZipEmpty, "Empty Zip"},
+		{ZipSpanned, "Spanned Zip"},
+	}
+	for _, test := range tests {
+		s := test.f.String()
+		if s != test.expected {
+			t.Errorf("got %q; want %q", s, test.expected)
+		}
+	}
+}

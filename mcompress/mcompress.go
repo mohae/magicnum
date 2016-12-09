@@ -9,74 +9,60 @@ import (
 	"strings"
 )
 
-
 const (
 	Unknown    Format = iota // unknown format
-	Gzip                     // Gzip compression format
+	GZip                     // Gzip compression format
+	BZip2                    // Bzip2 compression
+	LZ4                      // LZ4 compression
 	Tar                      // Tar format; normally used
 	Tar1                     // Tar1 magicnum format; normalizes to Tar
 	Tar2                     // Tar1 magicnum format; normalizes to Tar
 	Zip                      // Zip archive
 	ZipEmpty                 // Empty Zip Archive
 	ZipSpanned               // Spanned Zip Archive
-	Bzip2                    // Bzip2 compression
-	//LZW                      // LZW compression
-	LZ4 // LZ4 compression
 )
 
 // Magic numbers for compression and archive formats
 var (
 	magicnumGzip       = []byte{0x1f, 0x8b}
+	magicnumBzip2      = []byte{0x42, 0x5a, 0x68}
+	magicnumLZ4        = []byte{0x18, 0x4d, 0x22, 0x04}
 	magicnumTar1       = []byte{0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x30, 0x30} // offset: 257
 	magicnumTar2       = []byte{0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x20, 0x00} // offset: 257
 	magicnumZip        = []byte{0x50, 0x4b, 0x03, 0x04}
 	magicnumZipEmpty   = []byte{0x50, 0x4b, 0x05, 0x06}
 	magicnumZipSpanned = []byte{0x50, 0x4b, 0x07, 0x08}
-	magicnumBzip2      = []byte{0x42, 0x5a, 0x68}
 	//magicnumLZW        = []byte{0x1F, 0x9d}
-	magicnumLZ4 = []byte{0x18, 0x4d, 0x22, 0x04}
 )
 
 var (
 	ErrUnknown = errors.New("unknown compression format")
 )
 
-// TODO: should Format be more specific? e.g. CompressionFormat, MediaFormat, etc.
 type Format int
 
-func (f Format) String() string {
-	switch f {
-	case Gzip:
-		return "gzip"
-	case Tar, Tar1, Tar2:
-		return "tar"
-	case Zip:
-		return "zip"
-	case ZipEmpty:
-		return "empty zip archive"
-	case ZipSpanned:
-		return "spanned zip archive"
-	case Bzip2:
-		return "bzip2"
-	//case LZW:
-	//	return "lzw"
-	case LZ4:
-		return "lz4"
+const formatName = "UnknownGZipBZip2LZ4TarTar1Tar2ZipEmpty ZipSpanned Zip"
+
+var formatIndex = [...]uint8{0, 7, 11, 16, 19, 22, 26, 30, 33, 42, 53}
+
+func (i Format) String() string {
+	if i < 0 || i >= Format(len(formatIndex)-1) {
+		return fmt.Sprintf("Format(%d)", i)
 	}
-	return "unknown"
+	return formatName[formatIndex[i]:formatIndex[i+1]]
 }
 
 // Ext returns the extension for the format. Formats may have more than one
 // accepted extension; alternate extensiona are not supported.
 func (f Format) Ext() string {
 	switch f {
-	case Gzip:
+	case GZip:
 		return ".gz"
 	case Tar, Tar1, Tar2:
 		return ".tar"
 	case Zip, ZipEmpty, ZipSpanned:
 		return ".zip"
-	case Bzip2:
+	case BZip2:
 		return ".bz2"
 	//case LZW:
 	//	return ".Z"
@@ -84,25 +70,6 @@ func (f Format) Ext() string {
 		return ".lz4"
 	}
 	return "unknown"
-}
-
-func FormatFromString(s string) Format {
-	s = strings.ToLower(s)
-	switch s {
-	case "gzip", "gz":
-		return Gzip
-	case "tar":
-		return Tar
-	case "zip":
-		return Zip
-	case "bzip2", "bz2":
-		return Bzip2
-	//case "lzw", "Z":
-	//	return LZW
-	case "lz4":
-		return LZ4
-	}
-	return Unknown
 }
 
 // ParseFormat takes a string and returns the format or unknown. Any compressed
@@ -117,11 +84,11 @@ func ParseFormat(s string) Format {
 	s = strings.ToLower(s)
 	switch s {
 	case "gzip", "tar.gz", "tgz":
-		return Gzip
+		return GZip
 	case "tar":
 		return Tar
 	case "bz2", "tbz", "tb2", "tbz2", "tar.bz2":
-		return Bzip2
+		return BZip2
 	case "lz4", "tar.lz4", "tz4":
 		return LZ4
 	case "zip":
@@ -144,12 +111,12 @@ func GetFormat(r io.ReaderAt) (Format, error) {
 	if ok {
 		return LZ4, nil
 	}
-	ok, err = IsGzip(r)
+	ok, err = IsGZip(r)
 	if err != nil {
 		return Unknown, err
 	}
 	if ok {
-		return Gzip, nil
+		return GZip, nil
 	}
 	ok, err = IsZip(r)
 	if err != nil {
@@ -165,12 +132,12 @@ func GetFormat(r io.ReaderAt) (Format, error) {
 	if ok {
 		return Tar, nil
 	}
-	ok, err = IsBzip2(r)
+	ok, err = IsBZip2(r)
 	if err != nil {
 		return Unknown, err
 	}
 	if ok {
-		return Bzip2, nil
+		return BZip2, nil
 	}
 	//ok, err = IsLZW(r)
 	//if err != nil {
@@ -182,9 +149,9 @@ func GetFormat(r io.ReaderAt) (Format, error) {
 	return Unknown, ErrUnknown
 }
 
-// IsBzip2 checks to see if the received reader's contents are in bzip2 format
+// IsBZip2 checks to see if the received reader's contents are in bzip2 format
 // by checking the magic numbers.
-func IsBzip2(r io.ReaderAt) (bool, error) {
+func IsBZip2(r io.ReaderAt) (bool, error) {
 	h := make([]byte, 3)
 	// Read the first 3 bytes
 	_, err := r.ReadAt(h, 0)
@@ -210,9 +177,9 @@ func IsBzip2(r io.ReaderAt) (bool, error) {
 	return false, nil
 }
 
-// IsGzip checks to see if the received reader's contents are in gzip format
+// IsGZip checks to see if the received reader's contents are in gzip format
 // by checking the magic numbers.
-func IsGzip(r io.ReaderAt) (bool, error) {
+func IsGZip(r io.ReaderAt) (bool, error) {
 	h := make([]byte, 2)
 	// Read the first 2 bytes
 	_, err := r.ReadAt(h, 0)
