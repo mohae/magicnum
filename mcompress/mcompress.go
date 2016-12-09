@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+
 const (
 	Unknown    Format = iota // unknown format
 	Gzip                     // Gzip compression format
@@ -34,6 +35,10 @@ var (
 	magicnumBzip2      = []byte{0x42, 0x5a, 0x68}
 	//magicnumLZW        = []byte{0x1F, 0x9d}
 	magicnumLZ4 = []byte{0x18, 0x4d, 0x22, 0x04}
+)
+
+var (
+	ErrUnknown = errors.New("unknown compression format")
 )
 
 // TODO: should Format be more specific? e.g. CompressionFormat, MediaFormat, etc.
@@ -174,7 +179,7 @@ func GetFormat(r io.ReaderAt) (Format, error) {
 	//if ok {
 	//	return LZW, nil
 	//}
-	return Unknown, errors.New("unsupported format: input format is not known")
+	return Unknown, ErrUnknown
 }
 
 // IsBzip2 checks to see if the received reader's contents are in bzip2 format
