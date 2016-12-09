@@ -268,3 +268,31 @@ func TestExt(t *testing.T) {
 		}
 	}
 }
+
+func TestParseFormat(t *testing.T) {
+	tests := []struct {
+		v string
+		f Format
+	}{
+		{"z", Unknown},
+		{"gzip", GZip},
+		{"tar.gz", GZip},
+		{"tgz", GZip},
+		{"tar", Tar},
+		{"bz2", BZip2},
+		{"tbz", BZip2},
+		{"tb2", BZip2},
+		{"tbz2", BZip2},
+		{"tar.bz2", BZip2},
+		{"lz4", LZ4},
+		{"tar.lz4", LZ4},
+		{"tz4", LZ4},
+		{"zip", Zip},
+	}
+	for _, test := range tests {
+		f := ParseFormat(test.v)
+		if f != test.f {
+			t.Errorf("got %s; want %s", f, test.f)
+		}
+	}
+}
