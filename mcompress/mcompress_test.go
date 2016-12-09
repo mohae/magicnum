@@ -242,3 +242,29 @@ func TestString(t *testing.T) {
 		}
 	}
 }
+
+func TestExt(t *testing.T) {
+	tests := []struct {
+		f        Format
+		expected string
+	}{
+		{Unknown, "unknown"},
+		{Format(-1), "unknown"},
+		{Format(99), "unknown"},
+		{GZip, ".gz"},
+		{BZip2, ".bz2"},
+		{LZ4, ".lz4"},
+		{Tar, ".tar"},
+		{Tar1, ".tar"},
+		{Tar2, ".tar"},
+		{Zip, ".zip"},
+		{ZipEmpty, ".zip"},
+		{ZipSpanned, ".zip"},
+	}
+	for _, test := range tests {
+		s := test.f.Ext()
+		if s != test.expected {
+			t.Errorf("got %s; want %s", s, test.expected)
+		}
+	}
+}

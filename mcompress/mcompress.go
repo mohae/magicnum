@@ -58,16 +58,16 @@ func (f Format) Ext() string {
 	switch f {
 	case GZip:
 		return ".gz"
+	case BZip2:
+		return ".bz2"
+	case LZ4:
+		return ".lz4"
 	case Tar, Tar1, Tar2:
 		return ".tar"
 	case Zip, ZipEmpty, ZipSpanned:
 		return ".zip"
-	case BZip2:
-		return ".bz2"
-	//case LZW:
-	//	return ".Z"
-	case LZ4:
-		return ".lz4"
+		//case LZW:
+		//	return ".Z"
 	}
 	return "unknown"
 }
