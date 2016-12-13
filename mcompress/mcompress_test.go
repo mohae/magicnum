@@ -274,6 +274,7 @@ func TestParseFormat(t *testing.T) {
 		v string
 		f Format
 	}{
+		{"", Unknown},
 		{"z", Unknown},
 		{"gzip", GZip},
 		{"tar.gz", GZip},

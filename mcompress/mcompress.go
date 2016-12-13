@@ -78,6 +78,9 @@ func (f Format) Ext() string {
 // If the passed string starts with a '.', it is removed.
 // All strings are lowercased
 func ParseFormat(s string) Format {
+	if len(s) == 0 {
+		return Unknown
+	}
 	if s[0] == '.' {
 		s = s[1:]
 	}
