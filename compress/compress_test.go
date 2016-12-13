@@ -1,4 +1,4 @@
-package mcompress
+package compress
 
 import (
 	"archive/tar"
