@@ -113,6 +113,7 @@ func GetFormat(r io.ReaderAt) (Format, error) {
 	if _, err := r.ReadAt(b, 0); err == io.EOF {
 		return Unknown, ErrEmpty
 	}
+
 	ok, err := IsLZ4(r)
 	if err != nil {
 		return Unknown, err
