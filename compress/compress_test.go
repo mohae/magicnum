@@ -304,37 +304,40 @@ func TestGetFormat(t *testing.T) {
 		format Format
 		bytes  []byte
 		offset int
-		err    string
+		err    error
 	}{
-		{Unknown, Unknown, []byte{}, 0, "unknown compression format"},
-		{Unknown, Unknown, []byte{0x10, 0x11}, 0, "unknown compression format"},
-		{GZip, GZip, magicnumGZip, 0, ""},
-		{BZip2, BZip2, magicnumBZip2, 0, ""},
-		{LZ4, LZ4, []byte{0x04, 0x22, 0x4d, 0x18}, 0, ""},
-		{Tar1, Tar, magicnumTar1, 257, ""},
-		{Tar2, Tar, magicnumTar2, 257, ""},
-		{Zip, Zip, magicnumZip, 0, ""},
-		{ZipEmpty, Zip, magicnumZipEmpty, 0, ""},
-		{ZipSpanned, Zip, magicnumZipSpanned, 0, ""},
+		{Unknown, Unknown, []byte{}, 0, ErrEmpty},
+		{Unknown, Unknown, []byte{}, 0, ErrUnknown},
+		{Unknown, Unknown, []byte{0x10, 0x11}, 0, ErrUnknown},
+		{GZip, GZip, magicnumGZip, 0, nil},
+		{BZip2, BZip2, magicnumBZip2, 0, nil},
+		{LZ4, LZ4, []byte{0x04, 0x22, 0x4d, 0x18}, 0, nil},
+		{Tar1, Tar, magicnumTar1, 257, nil},
+		{Tar2, Tar, magicnumTar2, 257, nil},
+		{Zip, Zip, magicnumZip, 0, nil},
+		{ZipEmpty, Zip, magicnumZipEmpty, 0, nil},
+		{ZipSpanned, Zip, magicnumZipSpanned, 0, nil},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		var b []byte
-		b = make([]byte, 512)
-		var j int
-		for i := test.offset; i < test.offset+len(test.bytes); i++ {
-			b[i] = test.bytes[j]
-			j++
+		if i != 0 {
+			b = make([]byte, 512)
+			var j int
+			for i := test.offset; i < test.offset+len(test.bytes); i++ {
+				b[i] = test.bytes[j]
+				j++
+			}
 		}
 		r := bytes.NewReader(b)
 		f, err := GetFormat(r)
 		if err != nil {
-			if err.Error() != test.err {
+			if err != test.err {
 				t.Errorf("%s: got %q; want %q", test.name, err, test.err)
 			}
 			continue
 		}
-		if test.err != "" {
+		if test.err != nil {
 			t.Errorf("%s: no error; expected %q", test.name, test.err)
 			continue
 		}

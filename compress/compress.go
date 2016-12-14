@@ -37,6 +37,7 @@ var (
 
 var (
 	ErrUnknown = errors.New("unknown compression format")
+	ErrEmpty   = errors.New("no data to read")
 )
 
 type Format int
@@ -107,6 +108,11 @@ func ParseFormat(s string) Format {
 // numbers.  If you need to distinguich between the various zip formats, use
 // something else.
 func GetFormat(r io.ReaderAt) (Format, error) {
+	// see if the reader contains anything
+	b := make([]byte, 1)
+	if _, err := r.ReadAt(b, 0); err == io.EOF {
+		return Unknown, ErrEmpty
+	}
 	ok, err := IsLZ4(r)
 	if err != nil {
 		return Unknown, err
