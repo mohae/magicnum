@@ -24,8 +24,8 @@ const (
 
 // Magic numbers for compression and archive formats
 var (
-	magicnumGzip       = []byte{0x1f, 0x8b}
-	magicnumBzip2      = []byte{0x42, 0x5a, 0x68}
+	magicnumGZip       = []byte{0x1f, 0x8b}
+	magicnumBZip2      = []byte{0x42, 0x5a, 0x68}
 	magicnumLZ4        = []byte{0x18, 0x4d, 0x22, 0x04}
 	magicnumTar1       = []byte{0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x30, 0x30} // offset: 257
 	magicnumTar2       = []byte{0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x20, 0x00} // offset: 257
@@ -169,7 +169,7 @@ func IsBZip2(r io.ReaderAt) (bool, error) {
 		return false, fmt.Errorf("error while checking if input matched bzip2's magic number: %s", err)
 	}
 	var cb [3]byte
-	cbuf := bytes.NewBuffer(magicnumBzip2)
+	cbuf := bytes.NewBuffer(magicnumBZip2)
 	err = binary.Read(cbuf, binary.BigEndian, &cb)
 	if err != nil {
 		return false, fmt.Errorf("error while converting bzip2 magic number for comparison: %s", err)
@@ -197,7 +197,7 @@ func IsGZip(r io.ReaderAt) (bool, error) {
 		return false, fmt.Errorf("error while checking if input matched bzip2's magic number: %s", err)
 	}
 	var c16 uint16
-	cbuf := bytes.NewBuffer(magicnumGzip)
+	cbuf := bytes.NewBuffer(magicnumGZip)
 	err = binary.Read(cbuf, binary.BigEndian, &c16)
 	if err != nil {
 		return false, fmt.Errorf("error while converting bzip2 magic number for comparison: %s", err)

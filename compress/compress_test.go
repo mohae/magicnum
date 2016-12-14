@@ -297,3 +297,49 @@ func TestParseFormat(t *testing.T) {
 		}
 	}
 }
+
+func TestGetFormat(t *testing.T) {
+	tests := []struct {
+		name   Format
+		format Format
+		bytes  []byte
+		offset int
+		err    string
+	}{
+		{Unknown, Unknown, []byte{}, 0, "unknown compression format"},
+		{Unknown, Unknown, []byte{0x10, 0x11}, 0, "unknown compression format"},
+		{GZip, GZip, magicnumGZip, 0, ""},
+		{BZip2, BZip2, magicnumBZip2, 0, ""},
+		{LZ4, LZ4, []byte{0x04, 0x22, 0x4d, 0x18}, 0, ""},
+		{Tar1, Tar, magicnumTar1, 257, ""},
+		{Tar2, Tar, magicnumTar2, 257, ""},
+		{Zip, Zip, magicnumZip, 0, ""},
+		{ZipEmpty, Zip, magicnumZipEmpty, 0, ""},
+		{ZipSpanned, Zip, magicnumZipSpanned, 0, ""},
+	}
+
+	for _, test := range tests {
+		var b []byte
+		b = make([]byte, 512)
+		var j int
+		for i := test.offset; i < test.offset+len(test.bytes); i++ {
+			b[i] = test.bytes[j]
+			j++
+		}
+		r := bytes.NewReader(b)
+		f, err := GetFormat(r)
+		if err != nil {
+			if err.Error() != test.err {
+				t.Errorf("%s: got %q; want %q", test.name, err, test.err)
+			}
+			continue
+		}
+		if test.err != "" {
+			t.Errorf("%s: no error; expected %q", test.name, test.err)
+			continue
+		}
+		if f != test.format {
+			t.Errorf("%s: got %s; want %s", test.name, f, test.format)
+		}
+	}
+}
